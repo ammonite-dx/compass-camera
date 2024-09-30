@@ -25,6 +25,7 @@ async function startCamera() {
 startCamera();
 
 function startRecording() {
+    addLog("Recording started");
     mediaRecorder.start();
     document.getElementById('startRecording').disabled = true;
     document.getElementById('stopRecording').disabled = false;
@@ -34,6 +35,7 @@ function startRecording() {
 }
   
 function stopRecording() {
+    addLog("Recording stopped");
     mediaRecorder.stop();
     window.removeEventListener('deviceorientation', recordAngle);
     
@@ -43,12 +45,20 @@ function stopRecording() {
     saveRecording();
 }
   
+  
 // コンパス角度を記録
 function recordAngle(event) {
     const alpha = event.alpha;  // デバイスが向いている方角
-    const timestamp = Date.now();
-    angleData.push({ timestamp, alpha });
+    
+    // デバッグ用: HTML要素に角度を出力して、値が取得されているか確認
+    addLog("Alpha: " + alpha);
+    
+    if (alpha !== null) {
+      const timestamp = Date.now();
+      angleData.push({ timestamp, alpha });
+    }
 }
+  
 
   
 function saveRecording() {
@@ -80,17 +90,30 @@ function requestPermission() {
       DeviceOrientationEvent.requestPermission()
         .then(permissionState => {
           if (permissionState === 'granted') {
+            addLog("Permission granted for device orientation");
             window.addEventListener('deviceorientation', recordAngle);
           } else {
-            console.log('Permission to access device orientation was denied');
+            addLog('Permission to access device orientation was denied');
           }
         })
-        .catch(console.error);
+        .catch(error => {
+          addLog("Error while requesting permission: " + error);
+        });
     } else {
       // 権限リクエストが不要なブラウザの場合
+      addLog("DeviceOrientationEvent.requestPermission is not needed.");
       window.addEventListener('deviceorientation', recordAngle);
     }
-}  
+}
+  
+
+// ログ出力用関数
+function addLog(message) {
+    const logList = document.getElementById('log-list');
+    const newLog = document.createElement('li');
+    newLog.textContent = message;
+    logList.appendChild(newLog);
+}
   
 document.getElementById('startRecording').addEventListener('click', startRecording);
 document.getElementById('stopRecording').addEventListener('click', stopRecording);

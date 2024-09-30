@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>録画アプリ</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    button { padding: 10px 20px; font-size: 18px; margin: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>録画アプリ</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        button { padding: 10px 20px; font-size: 18px; margin: 10px; }
+    </style>
 </head>
 <body>
-  <h1>コンパスカメラ</h1>
-  <video id="video" autoplay muted playsinline></video>
-  <br>
-  <button id="startRecording">録画開始</button>
-  <button id="stopRecording" disabled>録画停止</button>
+    <h1>コンパスカメラ</h1>
+    <video id="video" autoplay muted playsinline></video><br>
+    <button id="startRecording">録画開始</button>
+    <button id="stopRecording" disabled>録画停止</button>
+    <!-- ログ表示用のdivを追加 -->
+    <div id="log" style="border: 1px solid #ccc; margin-top: 20px; padding: 10px; height: 200px; overflow-y: scroll;">
+        <h2>ログ出力:</h2>
+        <ul id="log-list"></ul>
+    </div>
 </body>
 <script src="script.js"></script>
 </html>
