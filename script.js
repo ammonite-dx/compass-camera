@@ -5,7 +5,13 @@ let angleData = [];
 
 // カメラにアクセスして、映像をvideoタグに表示
 function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: { exact: "environment" },  // リアカメラを指定
+            width: { ideal: 1920 },  // 1080pに対応する解像度を指定
+            height: { ideal: 1080 }
+        }
+    }).then(stream => {
         video.srcObject = stream;
       
         // MediaRecorderを初期化
