@@ -62,6 +62,8 @@ function recordAngle(event) {
 
   
 function saveRecording() {
+    addLog("Saving recording...");
+
     const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
     const videoUrl = URL.createObjectURL(videoBlob);
     
