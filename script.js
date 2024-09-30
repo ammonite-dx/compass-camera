@@ -84,7 +84,7 @@ function saveRecording() {
     downloadLink.download = 'recording.mp4';
     downloadLink.click();
     
-    saveAngleData();
+    // saveAngleData();
 }
 
 function saveAngleData() {
