@@ -19,10 +19,10 @@ function startCamera() {
         };
       
         // 録画停止時にsaveRecordingを呼び出す
-        mediaRecorder.onstop = function() {
-            addLog("Recording has stopped. Saving the recording...");
-            saveRecording();
-        };
+        //mediaRecorder.onstop = function() {
+        //    addLog("Recording has stopped. Saving the recording...");
+        //    saveRecording();
+        //};
     }).catch(error => {
         console.error('カメラアクセスに失敗しました:', error);
         addLog("Failed to access the camera: " + error);
@@ -45,9 +45,9 @@ function stopRecording() {
     addLog("Stopping the recording...");
   
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();  // 録画を停止
+        mediaRecorder.stop();  // 録画を停止
     } else {
-      addLog("MediaRecorder is not active.");
+        addLog("MediaRecorder is not active.");
     }
   
     window.removeEventListener('deviceorientation', recordAngle);
@@ -134,15 +134,3 @@ document.getElementById('startRecording').addEventListener('click', startRecordi
 document.getElementById('stopRecording').addEventListener('click', stopRecording);
 document.getElementById('saveVideo').addEventListener('click', saveRecording);
 document.getElementById('saveAngles').addEventListener('click', saveAngleData);
-
-mediaRecorder.onstop = function() {
-    addLog("Recording has stopped.");
-    saveRecording();  // 録画が停止したら動画を保存
-};
-  
-mediaRecorder.ondataavailable = function(event) {
-    if (event.data.size > 0) {
-      addLog("Recording chunk received.");
-      recordedChunks.push(event.data);
-    }
-};  
