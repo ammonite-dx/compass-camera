@@ -4,23 +4,30 @@ let recordedChunks = [];
 let angleData = [];
 
 // カメラにアクセスして、映像をvideoタグに表示
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
         video.srcObject = stream;
-    
+      
         // MediaRecorderを初期化
         mediaRecorder = new MediaRecorder(stream);
-    
+      
+        // 録画データを収集
         mediaRecorder.ondataavailable = function(event) {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
         };
-    } catch (error) {
-        addLog('カメラアクセスに失敗しました');
-    }
-}
+      
+        // 録画停止時にsaveRecordingを呼び出す
+        mediaRecorder.onstop = function() {
+            addLog("Recording has stopped. Saving the recording...");
+            saveRecording();
+        };
+    }).catch(error => {
+        console.error('カメラアクセスに失敗しました:', error);
+        addLog("Failed to access the camera: " + error);
+    });
+  }
 
 startCamera();
 
@@ -35,15 +42,19 @@ function startRecording() {
 }
   
 function stopRecording() {
-    addLog("Recording stopped");
-    mediaRecorder.stop();
-    window.removeEventListener('deviceorientation', recordAngle);
+    addLog("Stopping the recording...");
     
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();  // これで録画を停止し、onstopが呼ばれる
+    } else {
+      addLog("MediaRecorder is not active.");
+    }
+  
+    window.removeEventListener('deviceorientation', recordAngle);
+  
     document.getElementById('startRecording').disabled = false;
     document.getElementById('stopRecording').disabled = true;
-  
-    saveRecording();
-}
+}  
   
   
 // コンパス角度を記録
@@ -118,3 +129,15 @@ function addLog(message) {
   
 document.getElementById('startRecording').addEventListener('click', startRecording);
 document.getElementById('stopRecording').addEventListener('click', stopRecording);
+
+mediaRecorder.onstop = function() {
+    addLog("Recording has stopped.");
+    saveRecording();  // 録画が停止したら動画を保存
+};
+  
+mediaRecorder.ondataavailable = function(event) {
+    if (event.data.size > 0) {
+      addLog("Recording chunk received.");
+      recordedChunks.push(event.data);
+    }
+};  
