@@ -29,8 +29,8 @@ function startRecording() {
     document.getElementById('startRecording').disabled = true;
     document.getElementById('stopRecording').disabled = false;
   
-    // コンパスの角度を取得
-    window.addEventListener('deviceorientation', recordAngle);
+    // コンパスの権限をリクエストし、角度の記録を開始
+    requestPermission();
 }
   
 function stopRecording() {
@@ -74,6 +74,23 @@ function saveAngleData() {
     downloadLink.download = 'angles.json';
     downloadLink.click();
 }
+
+function requestPermission() {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', recordAngle);
+          } else {
+            console.log('Permission to access device orientation was denied');
+          }
+        })
+        .catch(console.error);
+    } else {
+      // 権限リクエストが不要なブラウザの場合
+      window.addEventListener('deviceorientation', recordAngle);
+    }
+}  
   
 document.getElementById('startRecording').addEventListener('click', startRecording);
 document.getElementById('stopRecording').addEventListener('click', stopRecording);
