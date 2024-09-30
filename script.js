@@ -5,21 +5,21 @@ let angleData = [];
 
 // カメラにアクセスして、映像をvideoタグに表示
 async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
     
-    // MediaRecorderを初期化
-    mediaRecorder = new MediaRecorder(stream);
+        // MediaRecorderを初期化
+        mediaRecorder = new MediaRecorder(stream);
     
-    mediaRecorder.ondataavailable = function(event) {
-      if (event.data.size > 0) {
-        recordedChunks.push(event.data);
-      }
-    };
-  } catch (error) {
-    console.error('カメラアクセスに失敗しました:', error);
-  }
+        mediaRecorder.ondataavailable = function(event) {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+    } catch (error) {
+        addLog('カメラアクセスに失敗しました');
+    }
 }
 
 startCamera();
@@ -105,7 +105,6 @@ function requestPermission() {
       window.addEventListener('deviceorientation', recordAngle);
     }
 }
-  
 
 // ログ出力用関数
 function addLog(message) {
