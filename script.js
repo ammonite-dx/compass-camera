@@ -40,12 +40,12 @@ function startRecording() {
     // コンパスの権限をリクエストし、角度の記録を開始
     requestPermission();
 }
-  
+
 function stopRecording() {
     addLog("Stopping the recording...");
-    
+  
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();  // これで録画を停止し、onstopが呼ばれる
+      mediaRecorder.stop();  // 録画を停止
     } else {
       addLog("MediaRecorder is not active.");
     }
@@ -54,9 +54,12 @@ function stopRecording() {
   
     document.getElementById('startRecording').disabled = false;
     document.getElementById('stopRecording').disabled = true;
-}  
   
-  
+    // 動画と角度の保存ボタンを有効化
+    document.getElementById('saveVideo').disabled = false;
+    document.getElementById('saveAngles').disabled = false;
+}
+ 
 // コンパス角度を記録
 function recordAngle(event) {
     const alpha = event.alpha;  // デバイスが向いている方角
@@ -70,22 +73,22 @@ function recordAngle(event) {
     }
 }
   
-
-  
 function saveRecording() {
-    addLog("Saving recording...");
-
-    const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-    const videoUrl = URL.createObjectURL(videoBlob);
-    
-    // 動画のダウンロードリンクを作成
-    const downloadLink = document.createElement('a');
-    downloadLink.href = videoUrl;
-    downloadLink.download = 'recording.mp4';
-    downloadLink.click();
-    
-    // saveAngleData();
-}
+    if (recordedChunks.length > 0) {
+        const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+        const videoUrl = URL.createObjectURL(videoBlob);
+  
+        // 動画のダウンロードリンクを作成して自動クリック
+        const downloadLink = document.createElement('a');
+        downloadLink.href = videoUrl;
+        downloadLink.download = 'recording.mp4';
+        downloadLink.click();
+  
+        addLog("Video has been saved.");
+    } else {
+        addLog("No video data to save.");
+    }
+}  
 
 function saveAngleData() {
     const angleBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
@@ -102,20 +105,20 @@ function requestPermission() {
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission()
         .then(permissionState => {
-          if (permissionState === 'granted') {
-            addLog("Permission granted for device orientation");
-            window.addEventListener('deviceorientation', recordAngle);
-          } else {
-            addLog('Permission to access device orientation was denied');
-          }
+            if (permissionState === 'granted') {
+                addLog("Permission granted for device orientation");
+                window.addEventListener('deviceorientation', recordAngle);
+            } else {
+                addLog('Permission to access device orientation was denied');
+            }
         })
         .catch(error => {
-          addLog("Error while requesting permission: " + error);
+            addLog("Error while requesting permission: " + error);
         });
     } else {
-      // 権限リクエストが不要なブラウザの場合
-      addLog("DeviceOrientationEvent.requestPermission is not needed.");
-      window.addEventListener('deviceorientation', recordAngle);
+        // 権限リクエストが不要なブラウザの場合
+        addLog("DeviceOrientationEvent.requestPermission is not needed.");
+        window.addEventListener('deviceorientation', recordAngle);
     }
 }
 
@@ -129,6 +132,8 @@ function addLog(message) {
   
 document.getElementById('startRecording').addEventListener('click', startRecording);
 document.getElementById('stopRecording').addEventListener('click', stopRecording);
+document.getElementById('saveVideo').addEventListener('click', saveRecording);
+document.getElementById('saveAngles').addEventListener('click', saveAngleData);
 
 mediaRecorder.onstop = function() {
     addLog("Recording has stopped.");
