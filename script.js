@@ -17,12 +17,7 @@ function startCamera() {
                 recordedChunks.push(event.data);
             }
         };
-      
-        // 録画停止時にsaveRecordingを呼び出す
-        //mediaRecorder.onstop = function() {
-        //    addLog("Recording has stopped. Saving the recording...");
-        //    saveRecording();
-        //};
+
     }).catch(error => {
         console.error('カメラアクセスに失敗しました:', error);
         addLog("Failed to access the camera: " + error);
@@ -63,9 +58,6 @@ function stopRecording() {
 // コンパス角度を記録
 function recordAngle(event) {
     const alpha = event.alpha;  // デバイスが向いている方角
-    
-    // デバッグ用: HTML要素に角度を出力して、値が取得されているか確認
-    addLog("Alpha: " + alpha);
     
     if (alpha !== null) {
       const timestamp = Date.now();
