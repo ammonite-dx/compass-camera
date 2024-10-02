@@ -57,7 +57,7 @@ function stopRecording() {
     document.getElementById('stopRecording').disabled = true;
   
     saveRecordingAndAngles();  // 表に追加
-  }
+}
   
  
 // コンパス角度を記録する関数
@@ -105,9 +105,8 @@ function addRecordingRow(videoUrl, jsonUrl) {
   
 function saveRecordingAndAngles() {
     
-    if (recordedChunks.length > 0 && angleData.length > 0) {
-
-        addLog("Saving the recording and angle data...");
+    addLog("Saving the recording and angle data...");
+    if ((recordedChunks.length > 0) && (angleData.length > 0)) {
 
         // 動画保存
         const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
