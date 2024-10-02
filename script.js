@@ -28,7 +28,7 @@ function startCamera() {
         console.error('カメラアクセスに失敗しました:', error);
         addLog("Failed to access the camera: " + error);
     });
-  }
+}
 
 startCamera();
 
@@ -102,9 +102,7 @@ function addRecordingRow(videoUrl, jsonUrl) {
   
 function saveRecordingAndAngles() {
     
-    addLog('recordedChuncs_length:' + recordedChunks.length);
-    addLog('angleData_length:' + angleData.length);
-    if ((recordedChunks.length > 0) && (angleData.length > 0)) {
+    if (angleData.length > 0) {
         addLog("Saving the recording and angle data...");
 
         // 動画保存
