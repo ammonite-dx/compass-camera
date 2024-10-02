@@ -1,8 +1,8 @@
 const video = document.getElementById('video');
+const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
 let mediaRecorder;
 let recordedChunks = [];
 let angleData = [];
-let recordingHistory = [];  // 複数の録画データを保持
 
 // カメラにアクセスして、映像をvideoタグに表示
 function startCamera() {
@@ -47,9 +47,9 @@ function stopRecording() {
     addLog("Stopping the recording...");
   
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();  // 録画停止
+        mediaRecorder.stop();  // 録画停止
     } else {
-      addLog("MediaRecorder is not active.");
+        addLog("MediaRecorder is not active.");
     }
   
     window.removeEventListener('deviceorientation', recordAngle);
@@ -75,7 +75,7 @@ function recordAngle(event) {
   
   
 function addRecordingRow(videoUrl, jsonUrl, timestamp) {
-    const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
+    
     const newRow = table.insertRow();
   
     // 録画日時
@@ -109,19 +109,12 @@ function saveRecordingAndAngles() {
     // 角度データをBlobに変換
     const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
     const jsonUrl = URL.createObjectURL(jsonBlob);
-        
-    // 録画と角度データを記録
-    recordingHistory.push({
-        videoUrl: videoUrl,
-        jsonUrl: jsonUrl,
-        timestamp: new Date().toLocaleString()
-    });
-  
+
     // 表に新しい行を追加
     addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
   
     // ログ追加
-        addLog("Recording and angle data added to table.");
+    addLog("Recording and angle data added to table.");
       
     // 保存後、recordedChunks と angleData をクリア
     recordedChunks = [];
