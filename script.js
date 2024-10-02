@@ -2,6 +2,7 @@ const video = document.getElementById('video');
 let mediaRecorder;
 let recordedChunks = [];
 let angleData = [];
+let recordingHistory = [];  // 複数の録画データを保持
 
 // カメラにアクセスして、映像をvideoタグに表示
 function startCamera() {
@@ -73,10 +74,8 @@ function recordAngle(event) {
 }
   
   
-function addRecordingRow(videoUrl, jsonUrl) {
-    const timestamp = new Date().toLocaleString();
+function addRecordingRow(videoUrl, jsonUrl, timestamp) {
     const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
-  
     const newRow = table.insertRow();
   
     // 録画日時
@@ -88,7 +87,7 @@ function addRecordingRow(videoUrl, jsonUrl) {
     const videoLink = document.createElement('a');
     videoLink.href = videoUrl;
     videoLink.textContent = '動画をダウンロード';
-    videoLink.download = `recording_${timestamp}.mp4`;
+    videoLink.download = `recording_${timestamp.replace(/[: ]/g, '-')}.mp4`;
     videoCell.appendChild(videoLink);
   
     // 角度記録のダウンロードリンク
@@ -96,28 +95,38 @@ function addRecordingRow(videoUrl, jsonUrl) {
     const jsonLink = document.createElement('a');
     jsonLink.href = jsonUrl;
     jsonLink.textContent = '角度記録をダウンロード';
-    jsonLink.download = `angles_${timestamp}.json`;
+    jsonLink.download = `angles_${timestamp.replace(/[: ]/g, '-')}.json`;
     jsonCell.appendChild(jsonLink);
 }
   
-function saveRecordingAndAngles() {
-    
-    if (angleData.length > 0) {
-        addLog("Saving the recording and angle data...");
-
-        // 動画保存
-        const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-        const videoUrl = URL.createObjectURL(videoBlob);
-      
-        // 角度保存
-        const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
-        const jsonUrl = URL.createObjectURL(jsonBlob);
   
-        // 表に追加
-        addRecordingRow(videoUrl, jsonUrl);
+function saveRecordingAndAngles() {
+
+    // 動画データをBlobに変換
+    const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+    const videoUrl = URL.createObjectURL(videoBlob);
+      
+    // 角度データをBlobに変換
+    const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
+        
+    // 録画と角度データを記録
+    recordingHistory.push({
+        videoUrl: videoUrl,
+        jsonUrl: jsonUrl,
+        timestamp: new Date().toLocaleString()
+    });
+  
+    // 表に新しい行を追加
+    addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
+  
+    // ログ追加
         addLog("Recording and angle data added to table.");
-    }
-}  
+      
+    // 保存後、recordedChunks と angleData をクリア
+    recordedChunks = [];
+    angleData = [];
+}
   
 
 function requestPermission() {
