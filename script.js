@@ -106,6 +106,9 @@ function addRecordingRow(videoUrl, jsonUrl) {
 function saveRecordingAndAngles() {
     
     if (recordedChunks.length > 0 && angleData.length > 0) {
+
+        addLog("Saving the recording and angle data...");
+
         // 動画保存
         const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
         const videoUrl = URL.createObjectURL(videoBlob);
