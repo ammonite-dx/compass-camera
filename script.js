@@ -66,9 +66,6 @@ function recordAngle(event) {
     const beta = event.beta;    // X軸: 傾き
     const gamma = event.gamma;  // Y軸: ロール
   
-    // デバッグログ
-    addLog(`Alpha: ${alpha}, Beta: ${beta}, Gamma: ${gamma}`);
-  
     if (alpha !== null && beta !== null && gamma !== null) {
       const timestamp = Date.now();
       angleData.push({ timestamp, alpha, beta, gamma });
@@ -105,8 +102,10 @@ function addRecordingRow(videoUrl, jsonUrl) {
   
 function saveRecordingAndAngles() {
     
-    addLog("Saving the recording and angle data...");
+    addLog('recordedChuncs_length:' + recordedChunks.length);
+    addLog('angleData_length:' + angleData.length);
     if ((recordedChunks.length > 0) && (angleData.length > 0)) {
+        addLog("Saving the recording and angle data...");
 
         // 動画保存
         const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
