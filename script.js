@@ -46,9 +46,9 @@ function stopRecording() {
     addLog("Stopping the recording...");
   
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();  // 録画を停止
+      mediaRecorder.stop();  // 録画停止
     } else {
-        addLog("MediaRecorder is not active.");
+      addLog("MediaRecorder is not active.");
     }
   
     window.removeEventListener('deviceorientation', recordAngle);
@@ -56,48 +56,70 @@ function stopRecording() {
     document.getElementById('startRecording').disabled = false;
     document.getElementById('stopRecording').disabled = true;
   
-    // 動画と角度の保存ボタンを有効化
-    document.getElementById('saveVideo').disabled = false;
-    document.getElementById('saveAngles').disabled = false;
-}
+    saveRecordingAndAngles();  // 表に追加
+  }
+  
  
-// コンパス角度を記録
+// コンパス角度を記録する関数
 function recordAngle(event) {
-    const alpha = event.alpha;  // デバイスが向いている方角
-    
-    if (alpha !== null) {
+    const alpha = event.alpha;  // Z軸: 方位角
+    const beta = event.beta;    // X軸: 傾き
+    const gamma = event.gamma;  // Y軸: ロール
+  
+    // デバッグログ
+    addLog(`Alpha: ${alpha}, Beta: ${beta}, Gamma: ${gamma}`);
+  
+    if (alpha !== null && beta !== null && gamma !== null) {
       const timestamp = Date.now();
-      angleData.push({ timestamp, alpha });
+      angleData.push({ timestamp, alpha, beta, gamma });
     }
 }
   
-function saveRecording() {
-    if (recordedChunks.length > 0) {
+  
+function addRecordingRow(videoUrl, jsonUrl) {
+    const timestamp = new Date().toLocaleString();
+    const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
+  
+    const newRow = table.insertRow();
+  
+    // 録画日時
+    const dateCell = newRow.insertCell(0);
+    dateCell.textContent = timestamp;
+  
+    // 動画のダウンロードリンク
+    const videoCell = newRow.insertCell(1);
+    const videoLink = document.createElement('a');
+    videoLink.href = videoUrl;
+    videoLink.textContent = '動画をダウンロード';
+    videoLink.download = `recording_${timestamp}.mp4`;
+    videoCell.appendChild(videoLink);
+  
+    // 角度記録のダウンロードリンク
+    const jsonCell = newRow.insertCell(2);
+    const jsonLink = document.createElement('a');
+    jsonLink.href = jsonUrl;
+    jsonLink.textContent = '角度記録をダウンロード';
+    jsonLink.download = `angles_${timestamp}.json`;
+    jsonCell.appendChild(jsonLink);
+}
+  
+function saveRecordingAndAngles() {
+    
+    if (recordedChunks.length > 0 && angleData.length > 0) {
+        // 動画保存
         const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
         const videoUrl = URL.createObjectURL(videoBlob);
+      
+        // 角度保存
+        const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
+        const jsonUrl = URL.createObjectURL(jsonBlob);
   
-        // 動画のダウンロードリンクを作成して自動クリック
-        const downloadLink = document.createElement('a');
-        downloadLink.href = videoUrl;
-        downloadLink.download = 'recording.mp4';
-        downloadLink.click();
-  
-        addLog("Video has been saved.");
-    } else {
-        addLog("No video data to save.");
+        // 表に追加
+        addRecordingRow(videoUrl, jsonUrl);
+        addLog("Recording and angle data added to table.");
     }
 }  
-
-function saveAngleData() {
-    const angleBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
-    const angleUrl = URL.createObjectURL(angleBlob);
-    
-    // JSONのダウンロードリンクを作成
-    const downloadLink = document.createElement('a');
-    downloadLink.href = angleUrl;
-    downloadLink.download = 'angles.json';
-    downloadLink.click();
-}
+  
 
 function requestPermission() {
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -130,5 +152,3 @@ function addLog(message) {
   
 document.getElementById('startRecording').addEventListener('click', startRecording);
 document.getElementById('stopRecording').addEventListener('click', stopRecording);
-document.getElementById('saveVideo').addEventListener('click', saveRecording);
-document.getElementById('saveAngles').addEventListener('click', saveAngleData);

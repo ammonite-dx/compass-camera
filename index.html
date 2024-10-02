@@ -15,9 +15,19 @@
     <button id="startRecording">録画開始</button>
     <button id="stopRecording" disabled>録画停止</button>
 
-    <!-- 保存ボタン -->
-    <button id="saveVideo" disabled>動画を保存</button>
-    <button id="saveAngles" disabled>角度記録を保存</button>
+    <table id="recordingsTable" border="1" style="margin-top: 20px;">
+        <thead>
+          <tr>
+            <th>録画日時</th>
+            <th>動画ダウンロードリンク</th>
+            <th>角度記録ダウンロードリンク</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- ここに新しい行が追加される -->
+        </tbody>
+    </table>
+      
 
     <!-- ログ表示用のdiv -->
     <div id="log" style="border: 1px solid #ccc; margin-top: 20px; padding: 10px; height: 200px; overflow-y: scroll;">
