@@ -58,6 +58,8 @@ function stopRecording() {
     document.getElementById('stopRecording').disabled = true;
   
     saveRecordingAndAngles();  // 表に追加
+
+    addLog("");
 }
   
  
@@ -105,10 +107,12 @@ function saveRecordingAndAngles() {
     // 動画データをBlobに変換
     const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
     const videoUrl = URL.createObjectURL(videoBlob);
+    addLog(videoUrl);
       
     // 角度データをBlobに変換
     const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
     const jsonUrl = URL.createObjectURL(jsonBlob);
+    addLog(jsonUrl);
 
     // 表に新しい行を追加
     addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
