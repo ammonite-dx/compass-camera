@@ -100,31 +100,37 @@ function addRecordingRow(videoUrl, jsonUrl, timestamp) {
     jsonLink.download = `angles_${timestamp.replace(/[: ]/g, '-')}.json`;
     jsonCell.appendChild(jsonLink);
 }
-  
-  
+
+
 function saveRecordingAndAngles() {
+    
+    if (recordedChunks.length > 0) {
 
-    // 動画データをBlobに変換
-    const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-    const videoUrl = URL.createObjectURL(videoBlob);
-    addLog(videoUrl);
-      
-    // 角度データをBlobに変換
-    const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
-    const jsonUrl = URL.createObjectURL(jsonBlob);
-    addLog(jsonUrl);
+        // 動画データをBlobに変換（ここですぐに行う）
+        const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+        const videoUrl = URL.createObjectURL(videoBlob);
+    
+        // 角度データをBlobに変換
+        if (angleData.length > 0) {
+            const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
+            const jsonUrl = URL.createObjectURL(jsonBlob);
 
-    // 表に新しい行を追加
-    addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
-  
-    // ログ追加
-    addLog("Recording and angle data added to table.");
-      
-    // 保存後、recordedChunks と angleData をクリア
-    recordedChunks = [];
-    angleData = [];
+            // 表に新しい行を追加
+            addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
+
+            // ログ追加
+            addLog("Recording and angle data added to table.");
+        }
+    
+        // 表に追加した後、recordedChunks をクリア
+        recordedChunks = [];  // 次の録画用にクリア
+        angleData = [];  // 次の記録用にクリア
+    
+    } else {
+        addLog("No recorded data available.");
+    }
 }
-  
+
 
 function requestPermission() {
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
