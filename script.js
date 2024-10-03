@@ -3,6 +3,7 @@ const table = document.getElementById('recordingsTable').getElementsByTagName('t
 let mediaRecorder;
 let recordedChunks = [];
 let angleData = [];
+let recordingHistory = [];  // 複数の録画データを保持
 
 // カメラにアクセスして、映像をvideoタグに表示
 function startCamera() {
@@ -114,6 +115,13 @@ function saveRecordingAndAngles() {
         if (angleData.length > 0) {
             const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
             const jsonUrl = URL.createObjectURL(jsonBlob);
+
+            // 録画と角度データを記録
+            recordingHistory.push({
+                videoUrl: videoUrl,
+                jsonUrl: jsonUrl,
+                timestamp: new Date().toLocaleString()
+            });
 
             // 表に新しい行を追加
             addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
