@@ -35,15 +35,19 @@ function startCamera() {
 startCamera();
 
 function startRecording() {
-    addLog("Recording started");
-    mediaRecorder.start();
-    document.getElementById('startRecording').disabled = true;
-    document.getElementById('stopRecording').disabled = false;
+    recordedChunks = [];  // 各録画ごとにリセット
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
   
-    // コンパスの権限をリクエストし、角度の記録を開始
-    requestPermission();
+    mediaRecorder.ondataavailable = function(event) {
+      if (event.data.size > 0) {
+        recordedChunks.push(event.data);
+      }
+    };
+  
+    mediaRecorder.start();
+    addLog("Recording started.");
 }
-
+  
 function stopRecording() {
     addLog("Stopping the recording...");
   
@@ -58,10 +62,11 @@ function stopRecording() {
     document.getElementById('startRecording').disabled = false;
     document.getElementById('stopRecording').disabled = true;
   
-    saveRecordingAndAngles();  // 表に追加
-
-    addLog("");
-}
+    mediaRecorder.onstop = function() {
+        // 録画停止時に録画データを保存
+        saveRecordingAndAngles();  // データの保存とリンク生成
+    };
+  }
   
  
 // コンパス角度を記録する関数
@@ -78,7 +83,7 @@ function recordAngle(event) {
   
   
 function addRecordingRow(videoUrl, jsonUrl, timestamp) {
-    
+    const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
     const newRow = table.insertRow();
   
     // 録画日時
@@ -104,13 +109,12 @@ function addRecordingRow(videoUrl, jsonUrl, timestamp) {
 
 
 function saveRecordingAndAngles() {
-    
     if (recordedChunks.length > 0) {
 
         // 動画データをBlobに変換（ここですぐに行う）
         const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
         const videoUrl = URL.createObjectURL(videoBlob);
-    
+
         // 角度データをBlobに変換
         if (angleData.length > 0) {
             const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
@@ -122,22 +126,21 @@ function saveRecordingAndAngles() {
                 jsonUrl: jsonUrl,
                 timestamp: new Date().toLocaleString()
             });
-
+    
             // 表に新しい行を追加
             addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
-
+    
             // ログ追加
             addLog("Recording and angle data added to table.");
         }
-    
-        // 表に追加した後、recordedChunks をクリア
+        
+        // recordedChunks をクリア
         recordedChunks = [];  // 次の録画用にクリア
         angleData = [];  // 次の記録用にクリア
-    
     } else {
         addLog("No recorded data available.");
     }
-}
+  }
 
 
 function requestPermission() {
