@@ -98,11 +98,10 @@ function stopRecording() {
   
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop();  // 録画停止
+        addLog("Recording stopped.");
     } else {
         addLog("MediaRecorder is not active.");
     }
-  
-    window.removeEventListener('deviceorientation', recordAngle);
   
     // 録画開始・停止ボタンの有効・無効を切り替え
     startButton.disabled = false;
@@ -114,14 +113,16 @@ function stopRecording() {
  
 // コンパス角度を取得する関数
 function getAngle() {
+    let currentAngle;
     window.addEventListener('deviceorientation', function(event) {
-        return {
+        currentAngle = {
             timestamp: new Date().getTime(),
             alpha: event.alpha,
             beta: event.beta,
             gamma: event.gamma
         };
     });
+    return currentAngle;
 }
   
 function addRecordingRow(videoUrl, jsonUrl, timestamp) {
