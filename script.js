@@ -78,6 +78,8 @@ function startRecording() {
     // データを初期化
     recordedChunks = [];
     angleData = [];
+
+    addLog("Data initialized.");
   
     // 録画を開始
     mediaRecorder.start();
