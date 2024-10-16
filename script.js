@@ -26,6 +26,15 @@ function initialize() {
         }
     }).then(stream => {
         video.srcObject = stream;
+
+        // MediaRecorderを初期化
+        mediaRecorder = new MediaRecorder(stream);
+      
+        // 録画データを収集
+        mediaRecorder.ondataavailable = function(event) {
+            recordedChunks.push(event.data);
+            angleData.push(getAngle());
+        };
     }).catch(error => {
         addLog("Failed to access the camera: " + error);
     });
@@ -67,25 +76,20 @@ function startRecording() {
     addLog("Starting the recording...");
 
     // データを初期化
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
     recordedChunks = [];
     angleData = [];
-
-    addLog("MediaRecorder created.");
   
-    // データ取得時に、録画データを保存
-    mediaRecorder.ondataavailable = function(event) {
-        recordedChunks.push(event.data);
-        angleData.push(getAngle());
-    };
-  
+    // 録画を開始
     mediaRecorder.start();
+
+    // 録画開始・停止ボタンの有効・無効を切り替え
     startButton.disabled = true;
     stopButton.disabled = false;
 
     addLog("Recording started.");
 }
-  
+
+// 録画の停止
 function stopRecording() {
 
     addLog("Stopping the recording...");
