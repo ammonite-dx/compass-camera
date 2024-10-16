@@ -1,9 +1,11 @@
 const video = document.getElementById('video');
+const requestButton = document.getElementById('requestPermission');
 const startButton = document.getElementById('startRecording');
 const stopButton = document.getElementById('stopRecording');
 const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
 const logList = document.getElementById('log-list');
 
+requestButton.addEventListener('click', requestPermission);
 startButton.addEventListener('click', startRecording);
 stopButton.addEventListener('click', stopRecording);
 
@@ -25,29 +27,38 @@ function initialize() {
     }).then(stream => {
         video.srcObject = stream;
     }).catch(error => {
-        console.error('カメラアクセスに失敗しました:', error);
         addLog("Failed to access the camera: " + error);
     });
 
-    // デバイスの向きを取得するための権限をリクエスト
+    addLog("App initialized.");
+}
+
+initialize();
+
+// デバイスの向きを取得するための権限をリクエスト
+function requestPermission() {
+
+    addLog("Requesting permission for device orientation...");
+
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-              if (permissionState === 'granted') {
-                  addLog("Permission granted for device orientation");
-              } else {
-                  addLog('Permission to access device orientation was denied');
-              }
-          })
-          .catch(error => {
-              addLog("Error while requesting permission: " + error);
-          });
-      } else {
-          // 権限リクエストが不要なブラウザの場合
-          addLog("DeviceOrientationEvent.requestPermission is not needed.");
-      }
+        .then(permissionState => {
+            if (permissionState === 'granted') {
+                addLog("Permission granted for device orientation");
+            } else {
+                addLog('Permission to access device orientation was denied');
+            }
+        })
+        .catch(error => {
+            addLog("Error while requesting permission: " + error);
+        });
+    } else {
+        // 権限リクエストが不要なブラウザの場合
+        addLog("DeviceOrientationEvent.requestPermission is not needed.");
+    }
 
-      addLog("App initialized.");
+    // 録画開始ボタンを有効にする
+    startButton.disabled = false;
 }
 
 // 録画の開始
@@ -158,5 +169,3 @@ function addLog(message) {
     newLog.textContent = message;
     logList.appendChild(newLog);
 }
-
-initialize();
