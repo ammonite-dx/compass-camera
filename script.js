@@ -1,7 +1,8 @@
 const video = document.getElementById('video');
-const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
 const startButton = document.getElementById('startRecording');
 const stopButton = document.getElementById('stopRecording');
+const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
+const logList = document.getElementById('log-list');
 
 startButton.addEventListener('click', startRecording);
 stopButton.addEventListener('click', stopRecording);
@@ -13,6 +14,8 @@ let angleData = [];
 initialize();
 
 function initialize() {
+
+    addLog("Initializing the app...");
 
     // カメラにアクセスして、映像をvideoタグに表示
     navigator.mediaDevices.getUserMedia({
@@ -45,15 +48,21 @@ function initialize() {
           // 権限リクエストが不要なブラウザの場合
           addLog("DeviceOrientationEvent.requestPermission is not needed.");
       }
+
+      addLog("App initialized.");
 }
 
 // 録画の開始
 function startRecording() {
 
+    addLog("Starting the recording...");
+
     // データを初期化
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
     recordedChunks = [];
     angleData = [];
+
+    addLog("MediaRecorder created.");
   
     // データ取得時に、録画データを保存
     mediaRecorder.ondataavailable = function(event) {
@@ -62,10 +71,14 @@ function startRecording() {
     };
   
     mediaRecorder.start();
+    startButton.disabled = true;
+    stopButton.disabled = false;
+
     addLog("Recording started.");
 }
   
 function stopRecording() {
+
     addLog("Stopping the recording...");
   
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
@@ -124,6 +137,8 @@ function addRecordingRow(videoUrl, jsonUrl, timestamp) {
 
 function saveRecordingAndAngles() {
 
+    addLog("Saving the recording and angle data...");
+
     // 動画データをBlobに変換
     const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
     const videoUrl = URL.createObjectURL(videoBlob);
@@ -141,7 +156,6 @@ function saveRecordingAndAngles() {
 
 // ログ出力用関数
 function addLog(message) {
-    const logList = document.getElementById('log-list');
     const newLog = document.createElement('li');
     newLog.textContent = message;
     logList.appendChild(newLog);
