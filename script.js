@@ -11,8 +11,6 @@ let mediaRecorder;
 let recordedChunks = [];
 let angleData = [];
 
-initialize();
-
 function initialize() {
 
     addLog("Initializing the app...");
@@ -160,3 +158,5 @@ function addLog(message) {
     newLog.textContent = message;
     logList.appendChild(newLog);
 }
+
+initialize();
