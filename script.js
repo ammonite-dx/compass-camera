@@ -1,12 +1,20 @@
 const video = document.getElementById('video');
 const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
+const startButton = document.getElementById('startRecording');
+const stopButton = document.getElementById('stopRecording');
+
+startButton.addEventListener('click', startRecording);
+stopButton.addEventListener('click', stopRecording);
+
 let mediaRecorder;
 let recordedChunks = [];
 let angleData = [];
-let recordingHistory = [];  // 複数の録画データを保持
 
-// カメラにアクセスして、映像をvideoタグに表示
-function startCamera() {
+initialize();
+
+function initialize() {
+
+    // カメラにアクセスして、映像をvideoタグに表示
     navigator.mediaDevices.getUserMedia({
         video: {
             facingMode: { exact: "environment" },  // リアカメラを指定
@@ -15,33 +23,42 @@ function startCamera() {
         }
     }).then(stream => {
         video.srcObject = stream;
-      
-        // MediaRecorderを初期化
-        mediaRecorder = new MediaRecorder(stream);
-      
-        // 録画データを収集
-        mediaRecorder.ondataavailable = function(event) {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
     }).catch(error => {
         console.error('カメラアクセスに失敗しました:', error);
         addLog("Failed to access the camera: " + error);
     });
+
+    // デバイスの向きを取得するための権限をリクエスト
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+              if (permissionState === 'granted') {
+                  addLog("Permission granted for device orientation");
+              } else {
+                  addLog('Permission to access device orientation was denied');
+              }
+          })
+          .catch(error => {
+              addLog("Error while requesting permission: " + error);
+          });
+      } else {
+          // 権限リクエストが不要なブラウザの場合
+          addLog("DeviceOrientationEvent.requestPermission is not needed.");
+      }
 }
 
-startCamera();
-
+// 録画の開始
 function startRecording() {
-    recordedChunks = [];  // 各録画ごとにリセット
+
+    // データを初期化
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+    recordedChunks = [];
+    angleData = [];
   
+    // データ取得時に、録画データを保存
     mediaRecorder.ondataavailable = function(event) {
-      if (event.data.size > 0) {
         recordedChunks.push(event.data);
-      }
+        angleData.push(getAngle());
     };
   
     mediaRecorder.start();
@@ -59,31 +76,28 @@ function stopRecording() {
   
     window.removeEventListener('deviceorientation', recordAngle);
   
-    document.getElementById('startRecording').disabled = false;
-    document.getElementById('stopRecording').disabled = true;
-  
-    mediaRecorder.onstop = function() {
-        // 録画停止時に録画データを保存
-        saveRecordingAndAngles();  // データの保存とリンク生成
-    };
-  }
-  
+    // 録画開始・停止ボタンの有効・無効を切り替え
+    startButton.disabled = false;
+    stopButton.disabled = true;
+
+    // データの保存とリンク生成
+    saveRecordingAndAngles();  
+} 
  
-// コンパス角度を記録する関数
-function recordAngle(event) {
-    const alpha = event.alpha;  // Z軸: 方位角
-    const beta = event.beta;    // X軸: 傾き
-    const gamma = event.gamma;  // Y軸: ロール
-  
-    if (alpha !== null && beta !== null && gamma !== null) {
-      const timestamp = Date.now();
-      angleData.push({ timestamp, alpha, beta, gamma });
-    }
+// コンパス角度を取得する関数
+function getAngle() {
+    window.addEventListener('deviceorientation', function(event) {
+        return {
+            timestamp: new Date().getTime(),
+            alpha: event.alpha,
+            beta: event.beta,
+            gamma: event.gamma
+        };
+    });
 }
   
-  
 function addRecordingRow(videoUrl, jsonUrl, timestamp) {
-    const table = document.getElementById('recordingsTable').getElementsByTagName('tbody')[0];
+
     const newRow = table.insertRow();
   
     // 録画日時
@@ -109,59 +123,20 @@ function addRecordingRow(videoUrl, jsonUrl, timestamp) {
 
 
 function saveRecordingAndAngles() {
-    if (recordedChunks.length > 0) {
 
-        // 動画データをBlobに変換（ここですぐに行う）
-        const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-        const videoUrl = URL.createObjectURL(videoBlob);
+    // 動画データをBlobに変換
+    const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+    const videoUrl = URL.createObjectURL(videoBlob);
 
-        // 角度データをBlobに変換
-        if (angleData.length > 0) {
-            const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
-            const jsonUrl = URL.createObjectURL(jsonBlob);
+    // 角度データをBlobに変換
+    const jsonBlob = new Blob([JSON.stringify(angleData)], { type: 'application/json' });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
 
-            // 録画と角度データを記録
-            recordingHistory.push({
-                videoUrl: videoUrl,
-                jsonUrl: jsonUrl,
-                timestamp: new Date().toLocaleString()
-            });
-    
-            // 表に新しい行を追加
-            addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
-    
-            // ログ追加
-            addLog("Recording and angle data added to table.");
-        }
-        
-        // recordedChunks をクリア
-        recordedChunks = [];  // 次の録画用にクリア
-        angleData = [];  // 次の記録用にクリア
-    } else {
-        addLog("No recorded data available.");
-    }
-  }
+    // 表に新しい行を追加
+    addRecordingRow(videoUrl, jsonUrl, new Date().toLocaleString());
 
-
-function requestPermission() {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission()
-        .then(permissionState => {
-            if (permissionState === 'granted') {
-                addLog("Permission granted for device orientation");
-                window.addEventListener('deviceorientation', recordAngle);
-            } else {
-                addLog('Permission to access device orientation was denied');
-            }
-        })
-        .catch(error => {
-            addLog("Error while requesting permission: " + error);
-        });
-    } else {
-        // 権限リクエストが不要なブラウザの場合
-        addLog("DeviceOrientationEvent.requestPermission is not needed.");
-        window.addEventListener('deviceorientation', recordAngle);
-    }
+    // ログ追加
+    addLog("Recording and angle data added to table.");
 }
 
 // ログ出力用関数
@@ -171,6 +146,3 @@ function addLog(message) {
     newLog.textContent = message;
     logList.appendChild(newLog);
 }
-  
-document.getElementById('startRecording').addEventListener('click', startRecording);
-document.getElementById('stopRecording').addEventListener('click', stopRecording);
