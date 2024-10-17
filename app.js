@@ -8,12 +8,11 @@ let recording = false;
 let records = []; // 映像フレームと角度のペアを保存
 let currentAngles = { alpha: 0, beta: 0, gamma: 0 };
 
-// ログを出力する関数
+// ログ出力用関数
 function log(message) {
-    const logEntry = document.createElement('div');
-    logEntry.textContent = message;
-    logArea.appendChild(logEntry);
-    logArea.scrollTop = logArea.scrollHeight;
+    const newLog = document.createElement('li');
+    newLog.textContent = message;
+    logList.appendChild(newLog);
 }
 
 // カメラ映像を取得する関数
