@@ -1,7 +1,7 @@
 const preview = document.getElementById('preview');
 const permissionBtn = document.getElementById('permission-btn');
-const logArea = document.getElementById('log-area');
 const downloadTable = document.getElementById('download-table').getElementsByTagName('tbody')[0];
+const logList = document.getElementById('log-list');
 
 let videoStream;
 let recording = false;
