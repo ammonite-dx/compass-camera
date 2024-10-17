@@ -34,6 +34,7 @@ function initialize() {
         mediaRecorder.ondataavailable = function(event) {
             recordedChunks.push(event.data);
             angleData.push(getAngle());
+            addLog("Data received.");
         };
     }).catch(error => {
         addLog("Failed to access the camera: " + error);
