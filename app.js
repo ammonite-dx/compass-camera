@@ -3,27 +3,37 @@ const permissionBtn = document.getElementById('permission-btn');
 const downloadTable = document.getElementById('download-table').getElementsByTagName('tbody')[0];
 const logList = document.getElementById('log-list');
 
-let videoStream;
+let mediaRecorder;
 let recording = false;
 let records = []; // 映像フレームと角度のペアを保存
 let currentAngles = { alpha: 0, beta: 0, gamma: 0 };
 
 // ログ出力用関数
-function log(message) {
+function addLog(message) {
     const newLog = document.createElement('li');
     newLog.textContent = message;
     logList.appendChild(newLog);
 }
 
 // カメラ映像を取得する関数
-async function startCamera() {
-    try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        preview.srcObject = videoStream;
-        log("カメラのアクセスを許可しました");
-    } catch (error) {
-        log("カメラのアクセスが拒否されました: " + error);
-    }
+function startCamera() {
+
+    addLog("カメラを起動しています。");
+
+    // カメラにアクセスして、映像をvideoタグに表示
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: { exact: "environment" },  // リアカメラを指定
+            width: { ideal: 1920 },  // 1080pに対応する解像度を指定
+            height: { ideal: 1080 }
+        }
+    }).then(stream => {
+        preview.srcObject = stream;
+    }).catch(error => {
+        addLog("カメラにアクセスできませんでした: " + error);
+    });
+
+    addLog("カメラが起動しました。");
 }
 
 // 角度を取得するためのイベントリスナー
@@ -41,16 +51,16 @@ function requestCompassPermission() {
                 if (permissionState === 'granted') {
                     window.addEventListener('deviceorientation', handleOrientation);
                     permissionBtn.textContent = '撮影開始';
-                    log("コンパスのアクセスを許可しました");
+                    addLog("コンパスのアクセスを許可しました");
                 } else {
-                    log("コンパスのアクセスが拒否されました");
+                    addLog("コンパスのアクセスが拒否されました");
                 }
             })
             .catch(console.error);
     } else {
         window.addEventListener('deviceorientation', handleOrientation);
         permissionBtn.textContent = '撮影開始';
-        log("コンパスのアクセスを許可しました");
+        addLog("コンパスのアクセスを許可しました");
     }
 }
 
@@ -70,7 +80,7 @@ function startRecording() {
     recording = true;
     records = []; // 新しい記録用の配列を初期化
     permissionBtn.textContent = '撮影停止';
-    log("撮影を開始しました");
+    addLog("撮影を開始しました");
 
     const captureFrameAndAngle = () => {
         if (recording) {
@@ -97,14 +107,14 @@ function captureImageWithAngles() {
     
     // フレームと角度のペアを保存
     records.push({ frame, angles });
-    log(`フレームと角度をキャプチャしました: alpha=${angles.alpha}, beta=${angles.beta}, gamma=${angles.gamma}`);
+    addLog(`フレームと角度をキャプチャしました: alpha=${angles.alpha}, beta=${angles.beta}, gamma=${angles.gamma}`);
 }
 
 // 撮影停止
 function stopRecording() {
     recording = false;
     permissionBtn.textContent = '撮影開始';
-    log("撮影を停止しました");
+    addLog("撮影を停止しました");
     saveRecordings();
 }
 
@@ -137,14 +147,14 @@ function saveRecordings() {
     newRow.insertCell().appendChild(videoLink);
     newRow.insertCell().appendChild(angleLink);
 
-    log("記録を保存しました");
+    addLog("記録を保存しました");
 }
 
 // ページを閉じる際の処理
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('videoRecords', JSON.stringify(records.map(record => record.frame)));
     localStorage.setItem('angleRecords', JSON.stringify(records.map(record => record.angles)));
-    log("記録をローカルストレージに保存しました");
+    addLog("記録をローカルストレージに保存しました");
 });
 
 // カメラの起動
