@@ -30,7 +30,7 @@ async function startCamera() {
     }
 }
 
-// 写真を撮影してダウンロードリンクを生成
+// 写真を撮影し、JSZipに写真データを追加
 function capturePhoto() {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -41,26 +41,12 @@ function capturePhoto() {
     // 画像データを生成
     return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            const img = document.createElement('img');
-            img.src = url;
-            img.width = 100;
-
-            // テーブルに行を追加
-            const row = downloadTableBody.insertRow();
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-
-            cell1.appendChild(img);
-
-            // ファイル名を決定し、JSZipに追加
             const fileName = `photo_${photoCount + 1}.png`;
-            zip.file(fileName, blob);
-            photoFiles.push(blob);
-
-            resolve();
+            zip.file(fileName, blob);  // JSZipにファイルを追加
+            photoFiles.push(blob);  // 後で使用するために保存
             logMessage(`写真${photoCount + 1}を撮影しました。`);
             photoCount++;
+            resolve();
         });
     });
 }
@@ -72,6 +58,8 @@ shutterButton.addEventListener('click', () => {
         isCapturing = true;
         shutterButton.textContent = "撮影停止";
         logMessage("撮影を開始します。");
+        photoCount = 0;
+        photoFiles = [];  // 前の写真データをリセット
 
         intervalId = setInterval(async () => {
             await capturePhoto();
@@ -91,12 +79,14 @@ shutterButton.addEventListener('click', () => {
             link.href = zipUrl;
             link.download = 'photos.zip';
             link.textContent = '写真をまとめてダウンロード';
-            logMessage("ZIPファイルの準備ができました。");
 
+            // ダウンロードテーブルを更新（ZIPファイルのダウンロードリンクを表示）
+            downloadTableBody.innerHTML = '';  // テーブルをクリア
             const row = downloadTableBody.insertRow();
             const cell = row.insertCell(0);
             cell.colSpan = 2; // テーブル全体を1つのセルで埋める
             cell.appendChild(link);
+            logMessage("ZIPファイルの準備ができました。");
         });
     }
 });
