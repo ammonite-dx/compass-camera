@@ -6,7 +6,9 @@ const logArea = document.getElementById('log');
 // JSZipインスタンスを作成
 const zip = new JSZip();
 let photoCount = 0;
-const photoFiles = [];
+let photoFiles = [];
+let isCapturing = false;
+let intervalId = null;
 
 // ログ表示エリアにメッセージを追加
 function logMessage(message) {
@@ -58,41 +60,45 @@ function capturePhoto() {
 
             resolve();
             logMessage(`写真${photoCount + 1}を撮影しました。`);
+            photoCount++;
         });
     });
 }
 
-// 1秒おきに5枚写真を撮影して、まとめてZIPファイルを作成
-shutterButton.addEventListener('click', async () => {
-    let count = 0;
-    photoCount = 0;
-    photoFiles.length = 0; // 前の撮影分をクリア
+// シャッターボタンを押して撮影を開始/停止
+shutterButton.addEventListener('click', () => {
+    if (!isCapturing) {
+        // 撮影を開始
+        isCapturing = true;
+        shutterButton.textContent = "撮影停止";
+        logMessage("撮影を開始します。");
 
-    const intervalId = setInterval(async () => {
-        if (count < 5) {
+        intervalId = setInterval(async () => {
             await capturePhoto();
-            photoCount++;
-            count++;
-        } else {
-            clearInterval(intervalId);
-            logMessage("5枚の写真を撮影しました。ZIPファイルを作成中...");
+        }, 1000); // 1秒ごとに撮影
 
-            // ZIPファイルを生成し、ダウンロードリンクを作成
-            zip.generateAsync({ type: "blob" }).then((content) => {
-                const zipUrl = URL.createObjectURL(content);
-                const link = document.createElement('a');
-                link.href = zipUrl;
-                link.download = 'photos.zip';
-                link.textContent = '写真をまとめてダウンロード';
-                logMessage("ZIPファイルの準備ができました。");
-                
-                const row = downloadTableBody.insertRow();
-                const cell = row.insertCell(0);
-                cell.colSpan = 2; // テーブル全体を1つのセルで埋める
-                cell.appendChild(link);
-            });
-        }
-    }, 1000); // 1秒ごとに撮影
+    } else {
+        // 撮影を停止
+        isCapturing = false;
+        shutterButton.textContent = "写真を撮影";
+        clearInterval(intervalId);
+        logMessage("撮影を停止しました。");
+
+        // ZIPファイルを生成し、ダウンロードリンクを作成
+        zip.generateAsync({ type: "blob" }).then((content) => {
+            const zipUrl = URL.createObjectURL(content);
+            const link = document.createElement('a');
+            link.href = zipUrl;
+            link.download = 'photos.zip';
+            link.textContent = '写真をまとめてダウンロード';
+            logMessage("ZIPファイルの準備ができました。");
+
+            const row = downloadTableBody.insertRow();
+            const cell = row.insertCell(0);
+            cell.colSpan = 2; // テーブル全体を1つのセルで埋める
+            cell.appendChild(link);
+        });
+    }
 });
 
 // アプリ起動時にカメラの使用を開始
