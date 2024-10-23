@@ -3,13 +3,13 @@ const shutterButton = document.getElementById('shutter-button');
 const downloadTableBody = document.querySelector('#download-table tbody');
 const logArea = document.getElementById('log');
 
-// JSZipインスタンス
+// JSZipインスタンスを作成
 let zip;
 let photoCount = 0;
 let photoFiles = [];
 let isCapturing = false;
 let intervalId = null;
-let captureStartTime = ''; // 撮影開始時刻を保持
+let sessionCount = 0;  // 撮影セッションのカウンター
 
 // ログ表示エリアにメッセージを追加
 function logMessage(message) {
@@ -31,17 +31,6 @@ async function startCamera() {
     }
 }
 
-// 現在の時刻を取得する関数（フォーマット: YYYY-MM-DD HH:mm:ss）
-function getFormattedDate() {
-    const now = new Date();
-    return now.getFullYear() + '-' +
-        String(now.getMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getDate()).padStart(2, '0') + ' ' +
-        String(now.getHours()).padStart(2, '0') + ':' +
-        String(now.getMinutes()).padStart(2, '0') + ':' +
-        String(now.getSeconds()).padStart(2, '0');
-}
-
 // 写真を撮影し、JSZipに写真データを追加
 function capturePhoto() {
     const canvas = document.createElement('canvas');
@@ -55,12 +44,48 @@ function capturePhoto() {
         canvas.toBlob((blob) => {
             const fileName = `photo_${photoCount + 1}.png`;
             zip.file(fileName, blob);  // JSZipにファイルを追加
-            photoFiles.push(blob);  // 後で使用するために保存
-
+            photoFiles.push({ fileName, blob });  // ファイル情報を保存
             logMessage(`写真${photoCount + 1}を撮影しました。`);
             photoCount++;
             resolve();
         });
+    });
+}
+
+// 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
+function createZipAndDownloadLink() {
+    const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');  // 日時を取得して整形
+    const zipFilename = `photos_${timestamp}.zip`;  // ZIPファイル名に日時を追加
+
+    // ZIPファイルを生成
+    zip.generateAsync({ type: "blob" }).then((content) => {
+        const zipUrl = URL.createObjectURL(content);
+
+        // ダウンロードテーブルに新しい行を追加
+        const row = downloadTableBody.insertRow();
+        
+        // 1枚目の写真のプレビューを表示
+        const cell1 = row.insertCell(0);
+        const imgPreview = document.createElement('img');
+        const firstPhotoUrl = URL.createObjectURL(photoFiles[0].blob);  // 1枚目の写真のURLを取得
+        imgPreview.src = firstPhotoUrl;
+        imgPreview.width = 100;
+        cell1.appendChild(imgPreview);
+
+        // ダウンロードリンクと撮影日時を表示
+        const cell2 = row.insertCell(1);
+        const link = document.createElement('a');
+        link.href = zipUrl;
+        link.download = zipFilename;
+        link.textContent = `${zipFilename} (ダウンロード)`;
+        cell2.appendChild(link);
+
+        // 撮影日時の表示
+        const timestampDiv = document.createElement('div');
+        timestampDiv.textContent = `撮影日時: ${timestamp}`;
+        cell2.appendChild(timestampDiv);
+
+        logMessage("ZIPファイルの準備ができました。");
     });
 }
 
@@ -73,8 +98,8 @@ shutterButton.addEventListener('click', () => {
         logMessage("撮影を開始します。");
         photoCount = 0;
         photoFiles = [];  // 前の写真データをリセット
-        zip = new JSZip();  // 新しいJSZipインスタンスを作成
-        captureStartTime = getFormattedDate();  // 撮影開始時刻を取得
+        zip = new JSZip();  // 新しいZIPインスタンスを作成
+        sessionCount++;  // セッションカウントを増加
 
         intervalId = setInterval(async () => {
             await capturePhoto();
@@ -88,29 +113,7 @@ shutterButton.addEventListener('click', () => {
         logMessage("撮影を停止しました。");
 
         // ZIPファイルを生成し、ダウンロードリンクを作成
-        zip.generateAsync({ type: "blob" }).then((content) => {
-            const zipUrl = URL.createObjectURL(content);
-            const link = document.createElement('a');
-            link.href = zipUrl;
-            link.download = `photos_${captureStartTime.replace(/[: ]/g, '_')}.zip`;  // 日時をファイル名に含める
-            link.textContent = `写真をまとめてダウンロード (${captureStartTime})`;
-
-            // 1枚目の写真のサムネイルを作成
-            const firstPhotoUrl = URL.createObjectURL(photoFiles[0]);
-            const img = document.createElement('img');
-            img.src = firstPhotoUrl;
-            img.width = 100;
-
-            // ダウンロードテーブルに新しい行を追加
-            const row = downloadTableBody.insertRow();
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-
-            cell1.appendChild(img);  // 1枚目の写真のサムネイルを表示
-            cell2.appendChild(link);  // ZIPファイルのダウンロードリンクを表示
-
-            logMessage("ZIPファイルの準備ができました。");
-        });
+        createZipAndDownloadLink();
     }
 });
 
