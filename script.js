@@ -14,8 +14,9 @@ function logMessage(message) {
 // カメラストリームを取得してプレビューエリアに表示
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         video.srcObject = stream;
+        video.play();
         logMessage("カメラの使用が許可されました。");
     } catch (error) {
         logMessage("カメラの使用許可が拒否されました: " + error.message);
