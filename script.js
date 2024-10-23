@@ -24,7 +24,7 @@ async function startCamera() {
 }
 
 // 写真を撮影してダウンロードリンクを生成
-shutterButton.addEventListener('click', () => {
+function capturePhoto() {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -53,6 +53,20 @@ shutterButton.addEventListener('click', () => {
 
         logMessage("写真を撮影しました。");
     });
+}
+
+// 1秒おきに5枚写真を撮影
+shutterButton.addEventListener('click', () => {
+    let count = 0;
+    const intervalId = setInterval(() => {
+        if (count < 5) {
+            capturePhoto();
+            count++;
+        } else {
+            clearInterval(intervalId);
+            logMessage("5枚の写真を撮影しました。");
+        }
+    }, 1000); // 1秒ごとに撮影
 });
 
 // アプリ起動時にカメラの使用を開始
