@@ -1,7 +1,13 @@
 const video = document.getElementById('preview');
 const shutterButton = document.getElementById('shutter-button');
+const compassButton = document.createElement('button');
 const downloadTableBody = document.querySelector('#download-table tbody');
 const logArea = document.getElementById('log');
+
+// 「コンパス許可」ボタンをシャッターボタンの左に追加
+compassButton.textContent = "コンパス許可";
+compassButton.id = "compass-button";
+document.body.insertBefore(compassButton, shutterButton);
 
 // JSZipインスタンスを作成
 let zip;
@@ -10,6 +16,11 @@ let photoFiles = [];
 let isCapturing = false;
 let intervalId = null;
 let sessionCount = 0;  // 撮影セッションのカウンター
+let orientationData = [];  // デバイスの角度情報を記録
+let compassAllowed = false;  // コンパス許可の状態
+
+// シャッターボタンを初期状態で無効化
+shutterButton.disabled = true;
 
 // ログ表示エリアにメッセージを追加
 function logMessage(message) {
@@ -52,10 +63,51 @@ function capturePhoto() {
     });
 }
 
+// コンパスデータを取得して記録
+function handleOrientation(event) {
+    const alpha = event.alpha;  // デバイスの向き（回転）
+    const beta = event.beta;    // 上下の傾き
+    const gamma = event.gamma;  // 左右の傾き
+    orientationData.push({
+        timestamp: Date.now(),
+        alpha: alpha,
+        beta: beta,
+        gamma: gamma
+    });
+}
+
+// コンパス許可のリクエスト
+compassButton.addEventListener('click', () => {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+            .then((response) => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    logMessage("コンパスの使用が許可されました。");
+                    compassAllowed = true;
+                    shutterButton.disabled = false;  // シャッターボタンを有効化
+                } else {
+                    logMessage("コンパスの使用許可が拒否されました。");
+                }
+            })
+            .catch((error) => {
+                logMessage("コンパス許可のリクエスト中にエラーが発生しました: " + error.message);
+            });
+    } else {
+        logMessage("このデバイスではコンパス機能の許可が必要ありません。");
+        compassAllowed = true;
+        shutterButton.disabled = false;  // シャッターボタンを有効化
+    }
+});
+
 // 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
 function createZipAndDownloadLink() {
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');  // 日時を取得して整形
     const zipFilename = `photos_${timestamp}.zip`;  // ZIPファイル名に日時を追加
+
+    // オリエンテーションデータをJSONとしてZIPに追加
+    const orientationJson = JSON.stringify(orientationData, null, 2);
+    zip.file(`orientation_${timestamp}.json`, orientationJson);
 
     // ZIPファイルを生成
     zip.generateAsync({ type: "blob" }).then((content) => {
@@ -98,11 +150,16 @@ shutterButton.addEventListener('click', () => {
         logMessage("撮影を開始します。");
         photoCount = 0;
         photoFiles = [];  // 前の写真データをリセット
+        orientationData = [];  // 角度データもリセット
         zip = new JSZip();  // 新しいZIPインスタンスを作成
         sessionCount++;  // セッションカウントを増加
 
         intervalId = setInterval(async () => {
             await capturePhoto();
+            // オリエンテーションデータを記録
+            if (compassAllowed) {
+                logMessage(`デバイスの角度を記録しました（写真${photoCount}）。`);
+            }
         }, 1000); // 1秒ごとに撮影
 
     } else {
