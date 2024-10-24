@@ -17,6 +17,7 @@ let isCapturing = false;
 let intervalId = null;
 let sessionCount = 0;  // 撮影セッションのカウンター
 let orientationData = [];  // デバイスの角度情報を記録
+let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の角度を保持
 let compassAllowed = false;  // コンパス許可の状態
 
 // シャッターボタンを初期状態で無効化
@@ -56,6 +57,15 @@ function capturePhoto() {
             const fileName = `photo_${photoCount + 1}.png`;
             zip.file(fileName, blob);  // JSZipにファイルを追加
             photoFiles.push({ fileName, blob });  // ファイル情報を保存
+
+            // 角度データを撮影タイミングに合わせて記録
+            orientationData.push({
+                timestamp: Date.now(),
+                alpha: currentOrientation.alpha,
+                beta: currentOrientation.beta,
+                gamma: currentOrientation.gamma
+            });
+
             logMessage(`写真${photoCount + 1}を撮影しました。`);
             photoCount++;
             resolve();
@@ -63,17 +73,11 @@ function capturePhoto() {
     });
 }
 
-// コンパスデータを取得して記録
+// コンパスデータをリアルタイムで更新
 function handleOrientation(event) {
-    const alpha = event.alpha;  // デバイスの向き（回転）
-    const beta = event.beta;    // 上下の傾き
-    const gamma = event.gamma;  // 左右の傾き
-    orientationData.push({
-        timestamp: Date.now(),
-        alpha: alpha,
-        beta: beta,
-        gamma: gamma
-    });
+    currentOrientation.alpha = event.alpha;  // デバイスの向き（回転）
+    currentOrientation.beta = event.beta;    // 上下の傾き
+    currentOrientation.gamma = event.gamma;  // 左右の傾き
 }
 
 // コンパス許可のリクエスト
@@ -156,10 +160,6 @@ shutterButton.addEventListener('click', () => {
 
         intervalId = setInterval(async () => {
             await capturePhoto();
-            // オリエンテーションデータを記録
-            if (compassAllowed) {
-                logMessage(`デバイスの角度を記録しました（写真${photoCount}）。`);
-            }
         }, 1000); // 1秒ごとに撮影
 
     } else {
