@@ -50,3 +50,30 @@ body {
     height: 100px;
     overflow-y: auto;
 }
+
+/* シャッターボタンとコンパス許可ボタンのスタイル */
+button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#compass-button {
+    background-color: #007bff;
+}
+
+#compass-button:hover {
+    background-color: #0056b3;
+}
+

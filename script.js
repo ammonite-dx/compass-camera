@@ -1,13 +1,8 @@
 const video = document.getElementById('preview');
 const shutterButton = document.getElementById('shutter-button');
-const compassButton = document.createElement('button');
+const compassButton = document.getElementById('compass-button');
 const downloadTableBody = document.querySelector('#download-table tbody');
 const logArea = document.getElementById('log');
-
-// 「コンパス許可」ボタンをシャッターボタンの左に追加
-compassButton.textContent = "コンパス許可";
-compassButton.id = "compass-button";
-document.body.insertBefore(compassButton, shutterButton);
 
 // JSZipインスタンスを作成
 let zip;
@@ -34,7 +29,7 @@ function logMessage(message) {
 // カメラストリームを取得してプレビューエリアに表示
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'environment' } });
         video.srcObject = stream;
         video.play();
         logMessage("カメラの使用が許可されました。");
@@ -46,8 +41,8 @@ async function startCamera() {
 // 写真を撮影し、JSZipに写真データを追加
 function capturePhoto() {
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = 1280;  // 1280px に設定
+    canvas.height = 720;  // 720px に設定
     const context = canvas.getContext('2d');
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -160,7 +155,7 @@ shutterButton.addEventListener('click', () => {
 
         intervalId = setInterval(async () => {
             await capturePhoto();
-        }, 1000); // 1秒ごとに撮影
+        }, 1000 / 30); // 1/30秒ごとに撮影
 
     } else {
         // 撮影を停止
