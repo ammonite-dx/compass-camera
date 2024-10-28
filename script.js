@@ -31,7 +31,6 @@ async function startCamera() {
             video: {
                 width: 1280,
                 height: 720,
-                frameRate: { ideal: 30, max: 30 },
                 facingMode: 'environment'
             }
         });
