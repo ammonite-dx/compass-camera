@@ -40,8 +40,14 @@ async function startCamera() {
         video.play();
         logMessage("カメラの使用が許可されました。");
 
+        // 使用可能な mimeType を選択
+        let mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm';  // WebM形式にフォールバック
+        }
+
         // MediaRecorderの初期化
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
