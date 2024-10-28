@@ -13,17 +13,6 @@ let orientationData = [];  // デバイスの角度情報を記録
 let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の角度を保持
 let compassAllowed = false;  // コンパス許可の状態
 
-// シャッターボタンを初期状態で無効化
-shutterButton.disabled = true;
-
-// ログ表示エリアにメッセージを追加
-function logMessage(message) {
-    const p = document.createElement('p');
-    p.textContent = message;
-    logArea.appendChild(p);
-    logArea.scrollTop = logArea.scrollHeight;
-}
-
 // カメラストリームを取得してプレビューエリアに表示
 async function startCamera() {
     try {
@@ -36,16 +25,9 @@ async function startCamera() {
         });
         video.srcObject = stream;
         video.play();
-        logMessage("カメラの使用が許可されました。");
 
         // MediaRecorderの初期化
-        let mimeType = 'video/mp4';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-            logMessage("指定したmimeTypeはサポートされていません。");
-            return;
-        }
-
-        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorder = new MediaRecorder(stream, { 'video/mp4' });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -57,7 +39,7 @@ async function startCamera() {
             createZipAndDownloadLink();
         };
     } catch (error) {
-        logMessage("カメラの使用許可が拒否されました: " + error.message);
+        console.error('カメラの起動に失敗しました:', error);
     }
 }
 
@@ -75,18 +57,16 @@ compassButton.addEventListener('click', () => {
             .then((response) => {
                 if (response === 'granted') {
                     window.addEventListener('deviceorientation', handleOrientation);
-                    logMessage("コンパスの使用が許可されました。");
                     compassAllowed = true;
                     shutterButton.disabled = false;  // シャッターボタンを有効化
                 } else {
-                    logMessage("コンパスの使用許可が拒否されました。");
+                    console.error("コンパスの使用許可が拒否されました。");
                 }
             })
             .catch((error) => {
-                logMessage("コンパス許可のリクエスト中にエラーが発生しました: " + error.message);
+                console.error("コンパス許可のリクエスト中にエラーが発生しました: " + error.message);
             });
     } else {
-        logMessage("このデバイスではコンパス機能の許可が必要ありません。");
         compassAllowed = true;
         shutterButton.disabled = false;  // シャッターボタンを有効化
     }
@@ -132,18 +112,6 @@ function createZipAndDownloadLink() {
         document.body.appendChild(link);  // リンクを一時的にDOMに追加
         link.click();  // 自動クリックでダウンロード開始
         document.body.removeChild(link);  // リンクを削除
-
-        logMessage("ZIPファイルを自動でダウンロードしました。");
-
-        // ダウンロードテーブルに新しい行を追加
-        const row = downloadTableBody.insertRow();
-        const cell1 = row.insertCell(0);
-        cell1.colSpan = 2;
-        cell1.textContent = `${zipFilename} (自動ダウンロード)`;
-
-        const timestampDiv = document.createElement('div');
-        timestampDiv.textContent = `撮影日時: ${timestamp}`;
-        cell1.appendChild(timestampDiv);
     });
 
     // 各種データのリセット
@@ -157,7 +125,6 @@ shutterButton.addEventListener('click', () => {
         // 録画を開始
         isRecording = true;
         shutterButton.textContent = "撮影停止";
-        logMessage("録画を開始します。");
 
         recordedChunks = [];
         orientationData = [];  // 角度データのリセット
@@ -172,9 +139,8 @@ shutterButton.addEventListener('click', () => {
     } else {
         // 録画を停止
         isRecording = false;
-        shutterButton.textContent = "写真を撮影";
+        shutterButton.textContent = "撮影開始";
         mediaRecorder.stop();
-        logMessage("録画を停止しました。");
     }
 });
 
