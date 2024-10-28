@@ -14,8 +14,6 @@ let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の
 let compassAllowed = false;  // コンパス許可の状態
 let orientationIntervalId;
 
-let framecount = 0;
-
 // シャッターボタンを初期状態で無効化
 shutterButton.disabled = true;
 
@@ -55,8 +53,7 @@ async function startCamera() {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
-            framecount++;
-            logMessage(framecount);
+            logMessage("dataavailableイベントが発生しました。");
         };
 
         mediaRecorder.onstop = () => {
@@ -150,7 +147,6 @@ shutterButton.addEventListener('click', () => {
         framecount = 0;
         shutterButton.textContent = "撮影停止";
         logMessage("録画を開始します。");
-        logMessage("フレーム数:" + framecount);
 
         recordedChunks = [];
         orientationData = [];  // 角度データのリセット
@@ -176,7 +172,6 @@ shutterButton.addEventListener('click', () => {
         clearInterval(orientationIntervalId);
         mediaRecorder.stop();
         logMessage("録画を停止しました。");
-        logMessage("フレーム数:" + framecount);
     }
 });
 
