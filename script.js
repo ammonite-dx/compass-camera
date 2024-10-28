@@ -98,8 +98,8 @@ function createZipAndDownloadLink() {
     zip = new JSZip();
 
     // 動画のBlobを作成
-    const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-    zip.file(`video_${timestamp}.webm`, videoBlob);
+    const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+    zip.file(`video_${timestamp}.mp4`, videoBlob);
 
     // オリエンテーションデータをJSONとしてZIPに追加
     const orientationJson = JSON.stringify(orientationData, null, 2);
@@ -118,7 +118,7 @@ function createZipAndDownloadLink() {
         const link = document.createElement('a');
         link.href = zipUrl;
         link.download = zipFilename;
-        link.textContent = `${zipFilename} (ダウンロード)`;
+        link.textContent = `${zipFilename}`;
         cell1.appendChild(link);
 
         const timestampDiv = document.createElement('div');
@@ -165,6 +165,9 @@ shutterButton.addEventListener('click', () => {
         clearInterval(orientationIntervalId);
         mediaRecorder.stop();
         logMessage("録画を停止しました。");
+
+        // ZIPファイルを生成し、ダウンロードリンクを作成
+        createZipAndDownloadLink();
     }
 });
 
