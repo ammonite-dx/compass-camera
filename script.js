@@ -14,7 +14,7 @@ let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の
 let compassAllowed = false;  // コンパス許可の状態
 let orientationIntervalId;
 
-let framecount;
+let framecount = 0;
 
 // シャッターボタンを初期状態で無効化
 shutterButton.disabled = true;
@@ -150,6 +150,7 @@ shutterButton.addEventListener('click', () => {
         framecount = 0;
         shutterButton.textContent = "撮影停止";
         logMessage("録画を開始します。");
+        logMessage("フレーム数:" + framecount);
 
         recordedChunks = [];
         orientationData = [];  // 角度データのリセット
