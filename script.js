@@ -93,24 +93,22 @@ compassButton.addEventListener('click', () => {
 
 // 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
 function createZipAndDownloadLink() {
-    logMessage("ZIPファイルを生成しています1");
+    logMessage("ZIPファイルの生成を開始します。");
 
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
     const zipFilename = `recording_${timestamp}.zip`;
-
-    logMessage("ZIPファイルを生成しています2");
+    logMessage("ZIPファイルを初期化しました。");
 
     // 動画のBlobを作成
     const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+    logMessage("動画ブロブを作成しました。");
     zip.file(`video_${timestamp}.mp4`, videoBlob);
-
-    logMessage("ZIPファイルを生成しています3");
+    logMessage("動画ブロブをZIPファイルに追加しました。");
 
     // オリエンテーションデータをJSONとしてZIPに追加
     const orientationJson = JSON.stringify(orientationData, null, 2);
     zip.file(`orientation_${timestamp}.json`, orientationJson);
-
-    logMessage("ZIPファイルを生成しています4");
+    logMessage("オリエンテーションデータをZIPファイルに追加しました。");
 
     // ZIPファイルを生成
     zip.generateAsync({ type: "blob" }).then((content) => {
