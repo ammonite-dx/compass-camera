@@ -25,7 +25,8 @@ async function startCamera() {
         video.play();
 
         // MediaRecorderの初期化
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+        let mimeType = 'video/mp4';
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
