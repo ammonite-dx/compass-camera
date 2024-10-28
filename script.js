@@ -57,6 +57,10 @@ compassButton.addEventListener('click', () => {
                 if (response === 'granted') {
                     window.addEventListener('deviceorientation', handleOrientation);
                     compassAllowed = true;
+                    
+                    // コンパス許可ボタンを非表示にし、シャッターボタンを表示
+                    compassButton.style.display = 'none';
+                    shutterButton.style.display = 'block';
                     shutterButton.disabled = false;  // シャッターボタンを有効化
                 } else {
                     console.error("コンパスの使用許可が拒否されました。");
@@ -123,6 +127,7 @@ shutterButton.addEventListener('click', () => {
     if (!isRecording) {
         // 録画を開始
         isRecording = true;
+        shutterButton.classList.add('recording');
         shutterButton.textContent = "撮影停止";
 
         recordedChunks = [];
@@ -138,6 +143,7 @@ shutterButton.addEventListener('click', () => {
     } else {
         // 録画を停止
         isRecording = false;
+        shutterButton.classList.remove('recording');
         shutterButton.textContent = "撮影開始";
         mediaRecorder.stop();
     }

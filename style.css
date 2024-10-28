@@ -32,42 +32,48 @@ body {
 #button-container {
     position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* 横並びに変更 */
     align-items: center;
     gap: 20px;
 }
 
 /* ボタンのスタイル */
 button {
-    padding: 15px 30px;
+    width: 150px;
+    height: 50px;
     font-size: 18px;
     font-weight: bold;
     color: white;
-    background-color: rgba(0, 122, 255, 0.8); /* 青みがかったボタン */
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
 }
 
+/* シャッターボタンとコンパス許可ボタンのスタイル */
+#shutter-button {
+    background-color: rgba(0, 122, 255, 0.8); /* 青色 */
+}
+
+#compass-button {
+    background-color: rgba(52, 199, 89, 0.9); /* 緑色 */
+}
+
 button:disabled {
-    background-color: rgba(200, 200, 200, 0.8); /* 灰色で無効状態を表す */
+    background-color: rgba(200, 200, 200, 0.8);
     cursor: not-allowed;
 }
 
-button:active {
-    transform: scale(0.95); /* クリック時に少し縮小 */
-}
-
-/* コンパス許可ボタンの個別スタイル */
-#compass-button {
-    background-color: rgba(52, 199, 89, 0.9); /* 緑系のカラー */
+#shutter-button:hover:not(:disabled),
+#compass-button:hover:not(:disabled) {
+    background-color: rgba(10, 132, 255, 0.9);
 }
 
 #compass-button:hover:not(:disabled) {
     background-color: rgba(48, 176, 82, 0.9);
 }
 
-#shutter-button:hover:not(:disabled) {
-    background-color: rgba(10, 132, 255, 0.9);
+/* シャッターボタンの撮影中スタイル（赤色） */
+#shutter-button.recording {
+    background-color: rgba(255, 69, 58, 0.9); /* 赤色 */
 }
