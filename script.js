@@ -1,8 +1,6 @@
 const video = document.getElementById('preview');
 const shutterButton = document.getElementById('shutter-button');
 const compassButton = document.getElementById('compass-button');
-const downloadTableBody = document.querySelector('#download-table tbody');
-const logArea = document.getElementById('log');
 
 // JSZipインスタンスを作成
 let zip;
@@ -27,7 +25,7 @@ async function startCamera() {
         video.play();
 
         // MediaRecorderの初期化
-        mediaRecorder = new MediaRecorder(stream, { 'video/mp4' });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
