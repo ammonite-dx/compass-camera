@@ -32,7 +32,7 @@ async function startCamera() {
             video: {
                 width: 1280,
                 height: 720,
-                frameRate: { ideal: 30, max: 30 }, // フレームレートを30fpsに設定
+                frameRate: { ideal: 30, max: 30 },
                 facingMode: 'environment'
             }
         });
@@ -40,10 +40,13 @@ async function startCamera() {
         video.play();
         logMessage("カメラの使用が許可されました。");
 
-        // mimeTypeの設定
-        let mimeType = 'video/mp4';
-
         // MediaRecorderの初期化
+        let mimeType = 'video/mp4';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            logMessage("指定したmimeTypeはサポートされていません。");
+            return;
+        }
+
         mediaRecorder = new MediaRecorder(stream, { mimeType });
         
         mediaRecorder.ondataavailable = (event) => {
@@ -93,22 +96,17 @@ compassButton.addEventListener('click', () => {
 
 // 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
 function createZipAndDownloadLink() {
-    logMessage("ZIPファイルの生成を開始します。");
-
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
     const zipFilename = `recording_${timestamp}.zip`;
-    logMessage("ZIPファイルを初期化しました。");
+    zip = new JSZip();
 
     // 動画のBlobを作成
     const videoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-    logMessage("動画ブロブを作成しました。");
     zip.file(`video_${timestamp}.mp4`, videoBlob);
-    logMessage("動画ブロブをZIPファイルに追加しました。");
 
     // オリエンテーションデータをJSONとしてZIPに追加
     const orientationJson = JSON.stringify(orientationData, null, 2);
     zip.file(`orientation_${timestamp}.json`, orientationJson);
-    logMessage("オリエンテーションデータをZIPファイルに追加しました。");
 
     // ZIPファイルを生成
     zip.generateAsync({ type: "blob" }).then((content) => {
@@ -123,7 +121,7 @@ function createZipAndDownloadLink() {
         const link = document.createElement('a');
         link.href = zipUrl;
         link.download = zipFilename;
-        link.textContent = `${zipFilename}`;
+        link.textContent = `${zipFilename} (ダウンロード)`;
         cell1.appendChild(link);
 
         const timestampDiv = document.createElement('div');
@@ -170,9 +168,6 @@ shutterButton.addEventListener('click', () => {
         clearInterval(orientationIntervalId);
         mediaRecorder.stop();
         logMessage("録画を停止しました。");
-
-        // ZIPファイルを生成し、ダウンロードリンクを作成
-        createZipAndDownloadLink();
     }
 });
 
