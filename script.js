@@ -94,7 +94,7 @@ compassButton.addEventListener('click', () => {
     }
 });
 
-// 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
+// ZIPファイルの生成とダウンロード
 function createZipAndDownloadLink() {
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
     const zipFilename = `recording_${timestamp}.zip`;
@@ -112,23 +112,25 @@ function createZipAndDownloadLink() {
     zip.generateAsync({ type: "blob" }).then((content) => {
         const zipUrl = URL.createObjectURL(content);
 
-        // ダウンロードテーブルに新しい行を追加
-        const row = downloadTableBody.insertRow();
-
-        // ダウンロードリンクと撮影日時を表示
-        const cell1 = row.insertCell(0);
-        cell1.colSpan = 2;
+        // 自動ダウンロード用リンクを生成しクリック
         const link = document.createElement('a');
         link.href = zipUrl;
         link.download = zipFilename;
-        link.textContent = `${zipFilename} (ダウンロード)`;
-        cell1.appendChild(link);
+        document.body.appendChild(link);  // リンクを一時的にDOMに追加
+        link.click();  // 自動クリックでダウンロード開始
+        document.body.removeChild(link);  // リンクを削除
+
+        logMessage("ZIPファイルを自動でダウンロードしました。");
+
+        // ダウンロードテーブルに新しい行を追加
+        const row = downloadTableBody.insertRow();
+        const cell1 = row.insertCell(0);
+        cell1.colSpan = 2;
+        cell1.textContent = `${zipFilename} (自動ダウンロード)`;
 
         const timestampDiv = document.createElement('div');
         timestampDiv.textContent = `撮影日時: ${timestamp}`;
         cell1.appendChild(timestampDiv);
-
-        logMessage("ZIPファイルの準備ができました。");
     });
 
     // 各種データのリセット
