@@ -14,6 +14,8 @@ let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の
 let compassAllowed = false;  // コンパス許可の状態
 let orientationIntervalId;
 
+let framecount;
+
 // シャッターボタンを初期状態で無効化
 shutterButton.disabled = true;
 
@@ -53,6 +55,8 @@ async function startCamera() {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
+            framecount++;
+            logMessage(framecount);
         };
 
         mediaRecorder.onstop = () => {
@@ -143,6 +147,7 @@ shutterButton.addEventListener('click', () => {
     if (!isRecording) {
         // 録画を開始
         isRecording = true;
+        framecount = 0;
         shutterButton.textContent = "撮影停止";
         logMessage("録画を開始します。");
 
