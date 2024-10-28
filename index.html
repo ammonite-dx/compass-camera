@@ -3,38 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラアプリ</title>
+    <title>CompassCamera</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <h1>CommpassCamera v63</h1>
-
-    <!-- プレビューエリア -->
+    <!-- フルスクリーンのプレビューエリア -->
     <video id="preview" autoplay playsinline></video>
 
-    <!-- コンパス許可ボタンとシャッターボタン -->
+    <!-- ボタンコンテナ -->
     <div id="button-container">
         <button id="compass-button">コンパス許可</button>
-        <button id="shutter-button">写真を撮影</button>
+        <button id="shutter-button" disabled>写真を撮影</button>
     </div>
 
-    <!-- ダウンロードテーブル -->
-    <table id="download-table">
-        <thead>
-            <tr>
-                <th>写真</th>
-                <th>ダウンロードリンク</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-
-    <!-- ログ表示エリア -->
-    <div id="log"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

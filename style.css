@@ -1,79 +1,73 @@
+/* リセットと基本スタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
+    overflow: hidden;
+    background-color: #333;
+    color: white;
 }
 
+/* フルスクリーンのプレビューエリア */
 #preview {
-    width: 100%;
-    max-width: 400px;
-    height: 300px;
-    background-color: black;
-    margin-bottom: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.7);
 }
 
-#shutter-button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+/* ボタンコンテナ */
+#button-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
 
-#download-table {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 400px;
-    border-collapse: collapse;
-}
-
-#download-table th, #download-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
-
-#log {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 400px;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border: 1px solid #ddd;
-    height: 100px;
-    overflow-y: auto;
-}
-
-/* シャッターボタンとコンパス許可ボタンのスタイル */
+/* ボタンのスタイル */
 button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #28a745;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
     color: white;
+    background-color: rgba(0, 122, 255, 0.8); /* 青みがかったボタン */
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s, transform 0.1s;
 }
 
 button:disabled {
-    background-color: #cccccc;
+    background-color: rgba(200, 200, 200, 0.8); /* 灰色で無効状態を表す */
     cursor: not-allowed;
 }
 
+button:active {
+    transform: scale(0.95); /* クリック時に少し縮小 */
+}
+
+/* コンパス許可ボタンの個別スタイル */
 #compass-button {
-    background-color: #007bff;
+    background-color: rgba(52, 199, 89, 0.9); /* 緑系のカラー */
 }
 
-#compass-button:hover {
-    background-color: #0056b3;
+#compass-button:hover:not(:disabled) {
+    background-color: rgba(48, 176, 82, 0.9);
 }
 
+#shutter-button:hover:not(:disabled) {
+    background-color: rgba(10, 132, 255, 0.9);
+}
