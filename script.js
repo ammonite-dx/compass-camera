@@ -1,20 +1,18 @@
-const { createFFmpeg, fetchFile } = FFmpeg;
-const ffmpeg = createFFmpeg({ log: true });
 const video = document.getElementById('preview');
 const shutterButton = document.getElementById('shutter-button');
 const compassButton = document.getElementById('compass-button');
 const downloadTableBody = document.querySelector('#download-table tbody');
 const logArea = document.getElementById('log');
 
-// JSZipインスタンスとその他の変数
-let photoCount = 0;
-let photoFiles = [];
-let isCapturing = false;
-let intervalId = null;
-let sessionCount = 0;
-let orientationData = [];
-let currentOrientation = { alpha: null, beta: null, gamma: null };
-let compassAllowed = false;
+// JSZipインスタンスを作成
+let zip;
+let isRecording = false;
+let mediaRecorder;
+let recordedChunks = [];
+let orientationData = [];  // デバイスの角度情報を記録
+let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の角度を保持
+let compassAllowed = false;  // コンパス許可の状態
+let orientationIntervalId;
 
 // シャッターボタンを初期状態で無効化
 shutterButton.disabled = true;
@@ -30,38 +28,33 @@ function logMessage(message) {
 // カメラストリームを取得してプレビューエリアに表示
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'environment' } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: 1280,
+                height: 720,
+                frameRate: { ideal: 30, max: 30 }, // フレームレートを30fpsに設定
+                facingMode: 'environment'
+            }
+        });
         video.srcObject = stream;
         video.play();
         logMessage("カメラの使用が許可されました。");
+
+        // MediaRecorderの初期化
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            createZipAndDownloadLink();
+        };
     } catch (error) {
         logMessage("カメラの使用許可が拒否されました: " + error.message);
     }
-}
-
-// 写真を撮影し、画像ファイルをphotoFilesに追加
-function capturePhoto() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1280;
-    canvas.height = 720;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-            const fileName = `photo_${photoCount + 1}.jpg`;
-            photoFiles.push({ fileName, blob });
-            orientationData.push({
-                timestamp: Date.now(),
-                alpha: currentOrientation.alpha,
-                beta: currentOrientation.beta,
-                gamma: currentOrientation.gamma
-            });
-            logMessage(`写真${photoCount + 1}を撮影しました。`);
-            photoCount++;
-            resolve();
-        }, 'image/jpeg', 0.8);
-    });
 }
 
 // コンパスデータをリアルタイムで更新
@@ -80,7 +73,7 @@ compassButton.addEventListener('click', () => {
                     window.addEventListener('deviceorientation', handleOrientation);
                     logMessage("コンパスの使用が許可されました。");
                     compassAllowed = true;
-                    shutterButton.disabled = false;
+                    shutterButton.disabled = false;  // シャッターボタンを有効化
                 } else {
                     logMessage("コンパスの使用許可が拒否されました。");
                 }
@@ -91,75 +84,84 @@ compassButton.addEventListener('click', () => {
     } else {
         logMessage("このデバイスではコンパス機能の許可が必要ありません。");
         compassAllowed = true;
-        shutterButton.disabled = false;
+        shutterButton.disabled = false;  // シャッターボタンを有効化
     }
 });
 
-// 画像をMP4動画に変換してダウンロードリンクを作成
-async function convertImagesToVideo() {
-    if (!ffmpeg.isLoaded()) await ffmpeg.load();
+// 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
+function createZipAndDownloadLink() {
+    const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
+    const zipFilename = `recording_${timestamp}.zip`;
+    zip = new JSZip();
 
-    // 画像ファイルをFFmpegに追加
-    for (let i = 0; i < photoFiles.length; i++) {
-        const photo = photoFiles[i];
-        await ffmpeg.FS('writeFile', `img${String(i).padStart(3, '0')}.jpg`, await fetchFile(photo.blob));
-    }
+    // 動画のBlobを作成
+    const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+    zip.file(`video_${timestamp}.webm`, videoBlob);
 
-    // FFmpegコマンドで画像を動画に変換
-    await ffmpeg.run('-framerate', '30', '-i', 'img%03d.jpg', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
+    // オリエンテーションデータをJSONとしてZIPに追加
+    const orientationJson = JSON.stringify(orientationData, null, 2);
+    zip.file(`orientation_${timestamp}.json`, orientationJson);
 
-    // 生成されたMP4ファイルを取得
-    const data = ffmpeg.FS('readFile', 'output.mp4');
-    const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-    const url = URL.createObjectURL(videoBlob);
+    // ZIPファイルを生成
+    zip.generateAsync({ type: "blob" }).then((content) => {
+        const zipUrl = URL.createObjectURL(content);
 
-    // ダウンロードテーブルに新しい行を追加
-    const row = downloadTableBody.insertRow();
-    const cell1 = row.insertCell(0);
-    const cell2 = row.insertCell(1);
+        // ダウンロードテーブルに新しい行を追加
+        const row = downloadTableBody.insertRow();
 
-    // 動画プレビュー用のサムネイル画像
-    const imgPreview = document.createElement('img');
-    const firstPhotoUrl = URL.createObjectURL(photoFiles[0].blob);
-    imgPreview.src = firstPhotoUrl;
-    imgPreview.width = 100;
-    cell1.appendChild(imgPreview);
+        // ダウンロードリンクと撮影日時を表示
+        const cell1 = row.insertCell(0);
+        cell1.colSpan = 2;
+        const link = document.createElement('a');
+        link.href = zipUrl;
+        link.download = zipFilename;
+        link.textContent = `${zipFilename} (ダウンロード)`;
+        cell1.appendChild(link);
 
-    // ダウンロードリンク
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'output.mp4';
-    link.textContent = '動画をダウンロード';
-    cell2.appendChild(link);
+        const timestampDiv = document.createElement('div');
+        timestampDiv.textContent = `撮影日時: ${timestamp}`;
+        cell1.appendChild(timestampDiv);
 
-    logMessage("動画ファイルの準備ができました。");
+        logMessage("ZIPファイルの準備ができました。");
+    });
+
+    // 各種データのリセット
+    recordedChunks = [];
+    orientationData = [];
 }
 
-// シャッターボタンを押して撮影を開始/停止
+// シャッターボタンを押して録画を開始/停止
 shutterButton.addEventListener('click', () => {
-    if (!isCapturing) {
-        // 撮影を開始
-        isCapturing = true;
+    if (!isRecording) {
+        // 録画を開始
+        isRecording = true;
         shutterButton.textContent = "撮影停止";
-        logMessage("撮影を開始します。");
-        photoCount = 0;
-        photoFiles = [];
-        orientationData = [];
-        sessionCount++;
+        logMessage("録画を開始します。");
 
-        intervalId = setInterval(async () => {
-            await capturePhoto();
+        recordedChunks = [];
+        orientationData = [];  // 角度データのリセット
+        zip = new JSZip();
+
+        // 動画録画開始
+        mediaRecorder.start();
+
+        // 角度データを1/30秒ごとに記録
+        orientationIntervalId = setInterval(() => {
+            orientationData.push({
+                timestamp: Date.now(),
+                alpha: currentOrientation.alpha,
+                beta: currentOrientation.beta,
+                gamma: currentOrientation.gamma
+            });
         }, 1000 / 30);
 
     } else {
-        // 撮影を停止
-        isCapturing = false;
+        // 録画を停止
+        isRecording = false;
         shutterButton.textContent = "写真を撮影";
-        clearInterval(intervalId);
-        logMessage("撮影を停止しました。");
-
-        // 画像を動画に変換してダウンロードリンクを作成
-        convertImagesToVideo();
+        clearInterval(orientationIntervalId);
+        mediaRecorder.stop();
+        logMessage("録画を停止しました。");
     }
 });
 
