@@ -127,7 +127,7 @@ shutterButton.addEventListener('click', () => {
     if (!isRecording) {
         // 録画を開始
         isRecording = true;
-        shutterButton.textContent = "撮影停止";
+        shutterButton.textContent = "■";
 
         recordedChunks = [];
         orientationData = [];  // 角度データのリセット
@@ -142,7 +142,7 @@ shutterButton.addEventListener('click', () => {
     } else {
         // 録画を停止
         isRecording = false;
-        shutterButton.textContent = "撮影開始";
+        shutterButton.textContent = "▼";
         mediaRecorder.stop();
     }
 });
