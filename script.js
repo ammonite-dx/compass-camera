@@ -175,6 +175,7 @@ shutterButton.addEventListener('click', () => {
         clearInterval(orientationIntervalId);
         mediaRecorder.stop();
         logMessage("録画を停止しました。");
+        logMessage("フレーム数:" + framecount);
     }
 });
 
