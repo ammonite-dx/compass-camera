@@ -97,7 +97,6 @@ function createZipAndDownloadLink() {
 
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
     const zipFilename = `recording_${timestamp}.zip`;
-    zip = new JSZip();
 
     logMessage("ZIPファイルを生成しています2");
 
