@@ -12,7 +12,6 @@ let recordedChunks = [];
 let orientationData = [];  // デバイスの角度情報を記録
 let currentOrientation = { alpha: null, beta: null, gamma: null };  // 現在の角度を保持
 let compassAllowed = false;  // コンパス許可の状態
-let orientationIntervalId;
 
 // シャッターボタンを初期状態で無効化
 shutterButton.disabled = true;
@@ -53,7 +52,6 @@ async function startCamera() {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
-            logMessage("dataavailableイベントが発生しました。");
         };
 
         mediaRecorder.onstop = () => {
@@ -95,7 +93,22 @@ compassButton.addEventListener('click', () => {
     }
 });
 
-// ZIPファイルの生成とダウンロード
+// requestVideoFrameCallbackを使ってフレームごとにオリエンテーションデータを追加
+function recordOrientationPerFrame() {
+    if (!isRecording) return;
+
+    video.requestVideoFrameCallback(() => {
+        orientationData.push({
+            timestamp: Date.now(),
+            alpha: currentOrientation.alpha,
+            beta: currentOrientation.beta,
+            gamma: currentOrientation.gamma
+        });
+        recordOrientationPerFrame();  // 次のフレームのコールバックを再帰的に呼び出す
+    });
+}
+
+// 撮影を停止し、ZIPファイルの生成とダウンロードリンクの作成
 function createZipAndDownloadLink() {
     const timestamp = new Date().toLocaleString().replace(/\//g, '-').replace(/:/g, '-');
     const zipFilename = `recording_${timestamp}.zip`;
@@ -144,7 +157,6 @@ shutterButton.addEventListener('click', () => {
     if (!isRecording) {
         // 録画を開始
         isRecording = true;
-        framecount = 0;
         shutterButton.textContent = "撮影停止";
         logMessage("録画を開始します。");
 
@@ -155,21 +167,13 @@ shutterButton.addEventListener('click', () => {
         // 動画録画開始
         mediaRecorder.start();
 
-        // 角度データを1/30秒ごとに記録
-        orientationIntervalId = setInterval(() => {
-            orientationData.push({
-                timestamp: Date.now(),
-                alpha: currentOrientation.alpha,
-                beta: currentOrientation.beta,
-                gamma: currentOrientation.gamma
-            });
-        }, 1000 / 30);
+        // フレームごとにオリエンテーションデータを取得
+        recordOrientationPerFrame();
 
     } else {
         // 録画を停止
         isRecording = false;
         shutterButton.textContent = "写真を撮影";
-        clearInterval(orientationIntervalId);
         mediaRecorder.stop();
         logMessage("録画を停止しました。");
     }
